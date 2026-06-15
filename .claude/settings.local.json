@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/Scripts/python -c ' *)",
+      "Bash(.venv/Scripts/python -c ' *2)",
+      "Bash(taskkill //F //IM python.exe)",
+      "Bash(npx next *)",
+      "Bash(git init *)"
+    ]
+  }
+}
