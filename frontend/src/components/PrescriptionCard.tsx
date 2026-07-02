@@ -46,16 +46,6 @@ export default function PrescriptionCard({
   } = prescription;
 
   const coverUrl = getCoverUrl(song.cover);
-  // Build absolute URL for html-to-image to resolve correctly
-  const absoluteCoverUrl = coverUrl.startsWith("http")
-    ? coverUrl
-    : typeof window !== "undefined"
-    ? `${window.location.origin}${coverUrl}`
-    : coverUrl;
-  const absoluteIconUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}${song.icon}`
-      : song.icon;
 
   return (
     <motion.section
@@ -86,9 +76,8 @@ export default function PrescriptionCard({
               {/* Eason icon stamp — use crossOrigin for html-to-image */}
               <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 relative stamp-icon">
                 <img
-                  src={absoluteIconUrl}
+                  src={song.icon}
                   alt=""
-                  crossOrigin="anonymous"
                   className="w-full h-full object-contain rounded-full p-0.5 bg-clinic-cream/80"
                   style={{
                     filter: "drop-shadow(2px 2px 3px rgba(0,0,0,0.15))",
@@ -145,12 +134,11 @@ export default function PrescriptionCard({
             <div className="mb-4 flex gap-4 items-center">
               <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden shadow-md border border-clinic-muted/20">
                 <img
-                  src={absoluteCoverUrl}
+                  src={coverUrl}
                   alt={song.title}
-                  crossOrigin="anonymous"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = `${window.location.origin}/assets/default_cover.svg`;
+                    (e.target as HTMLImageElement).src = "/assets/default_cover.svg";
                   }}
                 />
               </div>

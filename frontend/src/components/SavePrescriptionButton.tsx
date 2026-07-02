@@ -6,15 +6,27 @@ import { toPng } from "html-to-image";
 import { Button } from "@/components/ui/button";
 
 interface SavePrescriptionButtonProps {
-  /** Ref to the content area to export (must not include buttons) */
   exportRef: React.RefObject<HTMLDivElement | null>;
   rxId: string;
 }
 
 /**
- * Exports the prescription card as PNG.
- * First waits for all images inside to finish loading, then captures.
+ * Converts an image src to a data URL by fetching it.
  */
+async function imageToDataUrl(src: string): Promise<string> {
+  // Already a data URL, return as-is
+  if (src.startsWith("data:")) return src;
+
+  const res = await fetch(src);
+  const blob = await res.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 export default function SavePrescriptionButton({
   exportRef,
   rxId,
@@ -30,23 +42,30 @@ export default function SavePrescriptionButton({
 
     setStatus("loading");
 
+    // Store original src values to restore later
+    const originalSrcs: { img: HTMLImageElement; src: string }[] = [];
+
     try {
-      // 1. Wait for all images inside to be fully loaded
+      // 1. Convert all images to data URLs so html-to-image can render them
       const images = node.querySelectorAll("img");
-      const loadPromises = Array.from(images).map((img) => {
-        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
-        return new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = () => resolve(); // tolerate broken images
-          // Timeout after 3s
-          setTimeout(() => resolve(), 3000);
-        });
-      });
-      await Promise.all(loadPromises);
+      for (const img of Array.from(images)) {
+        const src = img.getAttribute("src") || img.currentSrc;
+        if (!src) continue;
 
-      // Small extra delay for rendering
-      await new Promise((r) => setTimeout(r, 200));
+        originalSrcs.push({ img, src });
 
+        try {
+          const dataUrl = await imageToDataUrl(src);
+          img.setAttribute("src", dataUrl);
+        } catch {
+          // If fetch fails, leave the original src
+        }
+      }
+
+      // 2. Small delay for browser to render the new data URL images
+      await new Promise((r) => setTimeout(r, 300));
+
+      // 3. Export
       const dataUrl = await toPng(node, {
         quality: 0.95,
         pixelRatio: 2,
@@ -54,6 +73,7 @@ export default function SavePrescriptionButton({
         cacheBust: false,
       });
 
+      // 4. Trigger download
       const link = document.createElement("a");
       link.download = `eason-clinic-${rxId}.png`;
       link.href = dataUrl;
@@ -65,6 +85,11 @@ export default function SavePrescriptionButton({
       console.error("Save failed:", err);
       setStatus("error");
       setTimeout(() => setStatus("idle"), 3000);
+    } finally {
+      // 5. Restore original src values
+      for (const { img, src } of originalSrcs) {
+        img.setAttribute("src", src);
+      }
     }
   }, [exportRef, rxId]);
 
