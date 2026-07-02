@@ -1,27 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Download, Loader2, Check } from "lucide-react";
 import { toPng } from "html-to-image";
 import { Button } from "@/components/ui/button";
 
 interface SavePrescriptionButtonProps {
-  targetRef: React.RefObject<HTMLDivElement | null>;
+  /** Ref to the content area to export (must not include buttons) */
+  exportRef: React.RefObject<HTMLDivElement | null>;
   rxId: string;
 }
 
 /**
- * Exports the prescription card as a PNG image.
- * Uses html-to-image for client-side rendering.
+ * Exports the prescription card as PNG.
+ * First waits for all images inside to finish loading, then captures.
  */
 export default function SavePrescriptionButton({
-  targetRef,
+  exportRef,
   rxId,
 }: SavePrescriptionButtonProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
 
-  const handleSave = async () => {
-    if (!targetRef.current) {
+  const handleSave = useCallback(async () => {
+    const node = exportRef.current;
+    if (!node) {
       setStatus("error");
       return;
     }
@@ -29,34 +31,47 @@ export default function SavePrescriptionButton({
     setStatus("loading");
 
     try {
-      const node = targetRef.current;
+      // 1. Wait for all images inside to be fully loaded
+      const images = node.querySelectorAll("img");
+      const loadPromises = Array.from(images).map((img) => {
+        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+        return new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve(); // tolerate broken images
+          // Timeout after 3s
+          setTimeout(() => resolve(), 3000);
+        });
+      });
+      await Promise.all(loadPromises);
+
+      // Small extra delay for rendering
+      await new Promise((r) => setTimeout(r, 200));
 
       const dataUrl = await toPng(node, {
         quality: 0.95,
         pixelRatio: 2,
         backgroundColor: "#fef9e7",
-        cacheBust: true,
+        cacheBust: false,
       });
 
-      // Trigger download
       const link = document.createElement("a");
       link.download = `eason-clinic-${rxId}.png`;
       link.href = dataUrl;
       link.click();
 
       setStatus("done");
-      setTimeout(() => setStatus("idle"), 2000);
+      setTimeout(() => setStatus("idle"), 2500);
     } catch (err) {
-      console.error("Failed to save prescription:", err);
+      console.error("Save failed:", err);
       setStatus("error");
       setTimeout(() => setStatus("idle"), 3000);
     }
-  };
+  }, [exportRef, rxId]);
 
   if (status === "error") {
     return (
       <p className="text-[11px] text-red-500/70 text-center">
-        保存失败。请尝试截图保存，或长按处方卡保存。
+        保存失败，请长按处方卡截图保存。
       </p>
     );
   }

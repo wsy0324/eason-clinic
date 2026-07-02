@@ -27,7 +27,8 @@ export default function PrescriptionCard({
   onRetry,
   isLoading = false,
 }: PrescriptionCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
+  /** Ref that wraps ONLY the exportable content (no buttons) */
+  const exportRef = useRef<HTMLDivElement>(null);
   const {
     rx_id,
     clinic,
@@ -45,6 +46,16 @@ export default function PrescriptionCard({
   } = prescription;
 
   const coverUrl = getCoverUrl(song.cover);
+  // Build absolute URL for html-to-image to resolve correctly
+  const absoluteCoverUrl = coverUrl.startsWith("http")
+    ? coverUrl
+    : typeof window !== "undefined"
+    ? `${window.location.origin}${coverUrl}`
+    : coverUrl;
+  const absoluteIconUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${song.icon}`
+      : song.icon;
 
   return (
     <motion.section
@@ -56,14 +67,12 @@ export default function PrescriptionCard({
     >
       <div className="max-w-xl mx-auto">
         {/* ─── Prescription Card ─── */}
-        <div
-          ref={cardRef}
-          className="prescription-paper rounded-lg shadow-2xl shadow-black/40 overflow-hidden"
-        >
+        <div className="prescription-paper rounded-lg shadow-2xl shadow-black/40 overflow-hidden">
           {/* Perforated top edge */}
           <div className="h-3 bg-[repeating-linear-gradient(90deg,transparent,transparent_6px,#d4c5a9_6px,#d4c5a9_7px)]" />
 
-          <div className="p-5 sm:p-8">
+          {/* ===== EXPORTABLE CONTENT (no buttons inside) ===== */}
+          <div ref={exportRef} className="p-5 sm:p-8">
             {/* ===== 1. Header ===== */}
             <div className="flex items-start justify-between mb-5 sm:mb-6">
               <div>
@@ -74,17 +83,17 @@ export default function PrescriptionCard({
                   Eason Music Clinic
                 </p>
               </div>
-              {/* Eason icon stamp */}
+              {/* Eason icon stamp — use crossOrigin for html-to-image */}
               <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 relative stamp-icon">
                 <img
-                  src={song.icon}
+                  src={absoluteIconUrl}
                   alt=""
-                  className="w-full h-full object-contain rounded-full border-2 border-dashed border-clinic-red/30 p-0.5 bg-clinic-cream/80"
+                  crossOrigin="anonymous"
+                  className="w-full h-full object-contain rounded-full p-0.5 bg-clinic-cream/80"
                   style={{
                     filter: "drop-shadow(2px 2px 3px rgba(0,0,0,0.15))",
                   }}
                 />
-                {/* Subtle rotation for sticker feel */}
                 <div
                   className="absolute -inset-1 rounded-full pointer-events-none opacity-20"
                   style={{
@@ -103,7 +112,7 @@ export default function PrescriptionCard({
 
             <hr className="dot-divider mb-5" />
 
-            {/* ===== 3. Clinic department + symptoms row ===== */}
+            {/* ===== 3. Clinic + Symptoms ===== */}
             <div className="flex flex-col sm:flex-row sm:items-start sm:gap-6 mb-4">
               <div className="mb-3 sm:mb-0 sm:w-auto flex-shrink-0">
                 <SectionTitle>就诊科室</SectionTitle>
@@ -132,20 +141,19 @@ export default function PrescriptionCard({
               </p>
             </div>
 
-            {/* ===== 5. Album cover + Song info ===== */}
+            {/* ===== 5. Album cover + Song ===== */}
             <div className="mb-4 flex gap-4 items-center">
-              {/* Album cover */}
               <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden shadow-md border border-clinic-muted/20">
                 <img
-                  src={coverUrl}
+                  src={absoluteCoverUrl}
                   alt={song.title}
+                  crossOrigin="anonymous"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = "/assets/default_cover.svg";
+                    (e.target as HTMLImageElement).src = `${window.location.origin}/assets/default_cover.svg`;
                   }}
                 />
               </div>
-              {/* Song name */}
               <div className="flex-1 min-w-0">
                 <SectionTitle>🎵 处方歌曲</SectionTitle>
                 <p
@@ -214,16 +222,16 @@ export default function PrescriptionCard({
             </p>
 
             {/* ===== 14. Closing line ===== */}
-            <p className="text-center text-sm sm:text-base text-clinic-gold/70 italic tracking-wide mb-5 font-medium leading-relaxed">
+            <p className="text-center text-sm sm:text-base text-clinic-gold/70 italic tracking-wide mb-2 font-medium leading-relaxed">
               感谢永远有歌把心境道破
             </p>
+          </div>
 
-            {/* ===== 15. Save button ===== */}
-            <div className="mb-4">
-              <SavePrescriptionButton targetRef={cardRef} rxId={rx_id} />
+          {/* ===== BUTTONS (outside exportRef, not in exported image) ===== */}
+          <div className="px-5 sm:px-8 pb-5 sm:pb-8">
+            <div className="mb-3">
+              <SavePrescriptionButton exportRef={exportRef} rxId={rx_id} />
             </div>
-
-            {/* ===== 16. Retry button ===== */}
             <div className="flex justify-center">
               <Button
                 onClick={onRetry}
