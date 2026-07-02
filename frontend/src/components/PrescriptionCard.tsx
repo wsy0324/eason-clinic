@@ -1,9 +1,12 @@
 "use client";
 
-import { RefreshCw, Loader2, Stethoscope } from "lucide-react";
+import { useRef } from "react";
+import { RefreshCw, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
+import SavePrescriptionButton from "./SavePrescriptionButton";
 import type { PrescriptionResponse } from "@/lib/types";
+import { getCoverUrl } from "@/lib/data/songs";
 
 interface PrescriptionCardProps {
   prescription: PrescriptionResponse;
@@ -11,15 +14,20 @@ interface PrescriptionCardProps {
   isLoading?: boolean;
 }
 
-/**
- * Vintage-style prescription card — expanded edition.
- * 14 content sections in a warm paper aesthetic.
- */
+function SectionTitle({ children }: { children: string }) {
+  return (
+    <h3 className="text-[11px] text-clinic-muted uppercase tracking-[0.15em] mb-2 font-medium">
+      {children}
+    </h3>
+  );
+}
+
 export default function PrescriptionCard({
   prescription,
   onRetry,
   isLoading = false,
 }: PrescriptionCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
   const {
     rx_id,
     clinic,
@@ -36,11 +44,7 @@ export default function PrescriptionCard({
     small_note,
   } = prescription;
 
-  const SectionTitle = ({ children }: { children: string }) => (
-    <h3 className="text-[11px] text-clinic-muted uppercase tracking-[0.15em] mb-2 font-medium">
-      {children}
-    </h3>
-  );
+  const coverUrl = getCoverUrl(song.cover);
 
   return (
     <motion.section
@@ -48,17 +52,20 @@ export default function PrescriptionCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="px-4 sm:px-6 py-8 sm:py-16"
+      className="px-3 sm:px-6 py-6 sm:py-12"
     >
       <div className="max-w-xl mx-auto">
-        {/* Prescription Card */}
-        <div className="prescription-paper rounded-lg shadow-2xl shadow-black/40 overflow-hidden">
+        {/* ─── Prescription Card ─── */}
+        <div
+          ref={cardRef}
+          className="prescription-paper rounded-lg shadow-2xl shadow-black/40 overflow-hidden"
+        >
           {/* Perforated top edge */}
           <div className="h-3 bg-[repeating-linear-gradient(90deg,transparent,transparent_6px,#d4c5a9_6px,#d4c5a9_7px)]" />
 
           <div className="p-5 sm:p-8">
-            {/* ===== 1. Header — title + clinic stamp ===== */}
-            <div className="flex items-start justify-between mb-4 sm:mb-6">
+            {/* ===== 1. Header ===== */}
+            <div className="flex items-start justify-between mb-5 sm:mb-6">
               <div>
                 <h2 className="text-lg sm:text-2xl font-bold text-clinic-ink tracking-wide">
                   陈医生音乐处方
@@ -67,14 +74,23 @@ export default function PrescriptionCard({
                   Eason Music Clinic
                 </p>
               </div>
-              {/* Clinic stamp */}
-              <div className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed border-clinic-red/40 flex items-center justify-center rotate-12 bg-clinic-red/5">
-                <div className="text-center -rotate-12">
-                  <Stethoscope className="h-4 w-4 sm:h-5 sm:w-5 text-clinic-red/60 mx-auto mb-0.5" />
-                  <span className="text-[8px] sm:text-[9px] text-clinic-red/70 font-medium tracking-wider">
-                    值班中
-                  </span>
-                </div>
+              {/* Eason icon stamp */}
+              <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 relative stamp-icon">
+                <img
+                  src={song.icon}
+                  alt=""
+                  className="w-full h-full object-contain rounded-full border-2 border-dashed border-clinic-red/30 p-0.5 bg-clinic-cream/80"
+                  style={{
+                    filter: "drop-shadow(2px 2px 3px rgba(0,0,0,0.15))",
+                  }}
+                />
+                {/* Subtle rotation for sticker feel */}
+                <div
+                  className="absolute -inset-1 rounded-full pointer-events-none opacity-20"
+                  style={{
+                    background: `radial-gradient(circle, ${song.themeColor} 0%, transparent 70%)`,
+                  }}
+                />
               </div>
             </div>
 
@@ -85,31 +101,30 @@ export default function PrescriptionCard({
               <span>机密 · 仅供患者本人查阅</span>
             </div>
 
-            {/* Divider */}
             <hr className="dot-divider mb-5" />
 
-            {/* ===== 3. Clinic department ===== */}
-            <div className="mb-4">
-              <SectionTitle>就诊科室</SectionTitle>
-              <p className="text-sm text-clinic-ink/80">{clinic}</p>
-            </div>
-
-            {/* ===== 4. Symptom tags ===== */}
-            <div className="mb-4">
-              <SectionTitle>今日症状</SectionTitle>
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {symptom_summary.map((symptom) => (
-                  <span
-                    key={symptom}
-                    className="inline-block px-2.5 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm border border-clinic-muted/30 text-clinic-ink bg-clinic-cream/50"
-                  >
-                    {symptom}
-                  </span>
-                ))}
+            {/* ===== 3. Clinic department + symptoms row ===== */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:gap-6 mb-4">
+              <div className="mb-3 sm:mb-0 sm:w-auto flex-shrink-0">
+                <SectionTitle>就诊科室</SectionTitle>
+                <p className="text-sm text-clinic-ink/80">{clinic}</p>
+              </div>
+              <div className="flex-1">
+                <SectionTitle>今日症状</SectionTitle>
+                <div className="flex flex-wrap gap-1.5">
+                  {symptom_summary.map((symptom) => (
+                    <span
+                      key={symptom}
+                      className="inline-block px-2.5 py-1 rounded-full text-xs border border-clinic-muted/30 text-clinic-ink bg-clinic-cream/50"
+                    >
+                      {symptom}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* ===== 5. Emotion analysis (auscultation) ===== */}
+            {/* ===== 4. Emotion analysis ===== */}
             <div className="mb-4 p-3 sm:p-4 rounded-lg bg-clinic-blue/5 border border-clinic-blue/10">
               <SectionTitle>📋 情绪听诊</SectionTitle>
               <p className="text-sm text-clinic-ink/80 leading-relaxed">
@@ -117,34 +132,46 @@ export default function PrescriptionCard({
               </p>
             </div>
 
-            {/* ===== 6. Song prescription ===== */}
-            <div className="mb-4">
-              <SectionTitle>🎵 处方歌曲</SectionTitle>
-              <p
-                className="text-2xl sm:text-4xl font-bold tracking-wider"
-                style={{ color: song.theme_color }}
-              >
-                《{song.title}》
-              </p>
+            {/* ===== 5. Album cover + Song info ===== */}
+            <div className="mb-4 flex gap-4 items-center">
+              {/* Album cover */}
+              <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden shadow-md border border-clinic-muted/20">
+                <img
+                  src={coverUrl}
+                  alt={song.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/assets/default_cover.svg";
+                  }}
+                />
+              </div>
+              {/* Song name */}
+              <div className="flex-1 min-w-0">
+                <SectionTitle>🎵 处方歌曲</SectionTitle>
+                <p
+                  className="text-xl sm:text-3xl font-bold tracking-wider truncate"
+                  style={{ color: song.themeColor }}
+                >
+                  《{song.displayTitle || song.title}》
+                </p>
+              </div>
             </div>
 
-            {/* ===== 7. Song reason ===== */}
+            {/* ===== 6. Song reason ===== */}
             <div className="mb-4">
-              <SectionTitle>💊 适用说明</SectionTitle>
+              <SectionTitle>💊 推荐理由</SectionTitle>
               <p className="text-sm text-clinic-ink/80 leading-relaxed italic">
                 {song_reason}
               </p>
             </div>
 
-            {/* ===== 8. Dosage ===== */}
+            {/* ===== 7. Dosage ===== */}
             <div className="mb-4">
               <SectionTitle>🕐 服用方式</SectionTitle>
-              <p className="text-sm text-clinic-ink/80 leading-relaxed">
-                {dosage}
-              </p>
+              <p className="text-sm text-clinic-ink/80 leading-relaxed">{dosage}</p>
             </div>
 
-            {/* ===== 9. Listening scene ===== */}
+            {/* ===== 8. Listening scene ===== */}
             <div className="mb-4">
               <SectionTitle>🎬 推荐场景</SectionTitle>
               <p className="text-sm text-clinic-ink/80 leading-relaxed">
@@ -152,7 +179,7 @@ export default function PrescriptionCard({
               </p>
             </div>
 
-            {/* ===== 10. Doctor advice — heart of the prescription ===== */}
+            {/* ===== 9. Doctor advice ===== */}
             <div className="mb-4 p-3 sm:p-4 rounded-lg bg-clinic-gold/8 border border-clinic-gold/20">
               <SectionTitle>📝 医嘱</SectionTitle>
               <p className="text-sm sm:text-base text-clinic-ink leading-relaxed font-medium">
@@ -160,39 +187,43 @@ export default function PrescriptionCard({
               </p>
             </div>
 
-            {/* ===== 11. Daily task ===== */}
+            {/* ===== 10. Daily task ===== */}
             <div className="mb-4">
               <SectionTitle>✅ 今日小任务</SectionTitle>
-              <p className="text-sm text-clinic-ink/80 leading-relaxed">
-                {daily_task}
-              </p>
+              <p className="text-sm text-clinic-ink/80 leading-relaxed">{daily_task}</p>
             </div>
 
-            {/* ===== 12. Avoid ===== */}
+            {/* ===== 11. Avoid ===== */}
             <div className="mb-4">
               <SectionTitle>⚠️ 服用禁忌</SectionTitle>
-              <p className="text-sm text-clinic-ink/80 leading-relaxed">
-                {avoid}
-              </p>
+              <p className="text-sm text-clinic-ink/80 leading-relaxed">{avoid}</p>
             </div>
 
-            {/* ===== 13. Follow-up ===== */}
+            {/* ===== 12. Follow-up ===== */}
             <div className="mb-5">
               <SectionTitle>🔄 复诊建议</SectionTitle>
-              <p className="text-sm text-clinic-ink/70 leading-relaxed">
-                {follow_up}
-              </p>
+              <p className="text-sm text-clinic-ink/70 leading-relaxed">{follow_up}</p>
             </div>
 
             {/* Divider */}
             <hr className="dot-divider mb-4" />
 
-            {/* ===== 14. Small note ===== */}
-            <p className="text-[10px] text-clinic-muted/60 leading-relaxed mb-5">
+            {/* ===== 13. Small note ===== */}
+            <p className="text-[10px] text-clinic-muted/60 leading-relaxed mb-4">
               {small_note}
             </p>
 
-            {/* Retry button */}
+            {/* ===== 14. Closing line ===== */}
+            <p className="text-center text-sm sm:text-base text-clinic-gold/70 italic tracking-wide mb-5 font-medium leading-relaxed">
+              感谢永远有歌把心境道破
+            </p>
+
+            {/* ===== 15. Save button ===== */}
+            <div className="mb-4">
+              <SavePrescriptionButton targetRef={cardRef} rxId={rx_id} />
+            </div>
+
+            {/* ===== 16. Retry button ===== */}
             <div className="flex justify-center">
               <Button
                 onClick={onRetry}

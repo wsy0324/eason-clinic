@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2c2416"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" rx="8"/>
+  <!-- Vinyl record -->
+  <circle cx="200" cy="180" r="100" fill="#1a1a1a" stroke="#333" stroke-width="2"/>
+  <circle cx="200" cy="180" r="85" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+  <circle cx="200" cy="180" r="70" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+  <circle cx="200" cy="180" r="55" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+  <circle cx="200" cy="180" r="40" fill="#c4a35a" opacity="0.3"/>
+  <circle cx="200" cy="180" r="15" fill="#fef9e7"/>
+  <!-- Music note -->
+  <text x="200" y="330" text-anchor="middle" fill="#8b7355" font-family="serif" font-size="28" opacity="0.8">♪</text>
+  <text x="200" y="365" text-anchor="middle" fill="#5a4a3a" font-family="sans-serif" font-size="12" opacity="0.6">NO COVER</text>
+</svg>

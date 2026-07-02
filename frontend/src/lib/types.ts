@@ -1,5 +1,5 @@
 /**
- * TypeScript type definitions for Eason Music Clinic.
+ * TypeScript type definitions for Eason Music Clinic — expanded edition.
  */
 
 /** Request body for POST /api/prescription */
@@ -8,15 +8,19 @@ export interface PrescriptionRequest {
   recent_song_ids: string[];
 }
 
-/** Song info returned in the prescription (no icon) */
+/** Song info returned in the prescription */
 export interface SongInfo {
   id: string;
   title: string;
+  displayTitle: string;
   moods: string[];
-  theme_color: string;
+  primaryMood: string;
+  themeColor: string;
+  cover: string | null;
+  icon: string;
 }
 
-/** Full prescription response from the API — expanded version */
+/** Full prescription response from the API */
 export interface PrescriptionResponse {
   rx_id: string;
   clinic: string;

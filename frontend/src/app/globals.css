@@ -172,6 +172,33 @@
   border-radius: 4px;
 }
 
+/* Eason icon stamp on prescription card */
+.stamp-icon {
+  transform: rotate(5deg);
+  transition: transform 0.3s ease;
+}
+.stamp-icon:hover {
+  transform: rotate(-3deg) scale(1.05);
+}
+
+/* Album cover hover effect */
+.prescription-paper img[src*="cd_cover"] {
+  transition: transform 0.3s ease;
+}
+
+/* Closing line decorative style */
+.closing-line {
+  position: relative;
+  display: inline-block;
+}
+.closing-line::before,
+.closing-line::after {
+  content: "♪";
+  font-size: 0.6em;
+  opacity: 0.4;
+  margin: 0 0.5em;
+}
+
 /* Dotted line divider */
 .dot-divider {
   border-top: 2px dotted #d4c5a9;
