@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ export default function PrescriptionCard({
     small_note,
   } = prescription;
 
+  const exportRef = useRef<HTMLDivElement>(null);
   const coverUrl = getCoverUrl(song.cover);
 
   return (
@@ -58,7 +60,7 @@ export default function PrescriptionCard({
           {/* Perforated top edge */}
           <div className="h-3 bg-[repeating-linear-gradient(90deg,transparent,transparent_6px,#d4c5a9_6px,#d4c5a9_7px)]" />
 
-          <div className="p-5 sm:p-8">
+          <div ref={exportRef} className="p-5 sm:p-8">
             {/* ===== 1. Header ===== */}
             <div className="flex items-start justify-between mb-5 sm:mb-6">
               <div>
@@ -220,7 +222,7 @@ export default function PrescriptionCard({
           {/* ===== BUTTONS (outside exportRef, marked export-ignore) ===== */}
           <div className="export-ignore px-5 sm:px-8 pb-5 sm:pb-8">
             <div className="mb-3">
-              <SavePrescriptionButton prescription={prescription} rxId={rx_id} />
+              <SavePrescriptionButton exportRef={exportRef} rxId={rx_id} />
             </div>
             <div className="flex justify-center">
               <Button
