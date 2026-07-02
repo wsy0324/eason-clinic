@@ -78,6 +78,9 @@ export default function PrescriptionCard({
                 <img
                   src={song.icon}
                   alt=""
+                  crossOrigin="anonymous"
+                  decoding="async"
+                  loading="eager"
                   className="w-full h-full object-contain rounded-full p-0.5 bg-clinic-cream/80"
                   style={{
                     filter: "drop-shadow(2px 2px 3px rgba(0,0,0,0.15))",
@@ -136,6 +139,9 @@ export default function PrescriptionCard({
                 <img
                   src={coverUrl}
                   alt={song.title}
+                  crossOrigin="anonymous"
+                  decoding="async"
+                  loading="eager"
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = "/assets/default_cover.svg";
@@ -215,8 +221,8 @@ export default function PrescriptionCard({
             </p>
           </div>
 
-          {/* ===== BUTTONS (outside exportRef, not in exported image) ===== */}
-          <div className="px-5 sm:px-8 pb-5 sm:pb-8">
+          {/* ===== BUTTONS (outside exportRef, marked export-ignore) ===== */}
+          <div className="export-ignore px-5 sm:px-8 pb-5 sm:pb-8">
             <div className="mb-3">
               <SavePrescriptionButton exportRef={exportRef} rxId={rx_id} />
             </div>

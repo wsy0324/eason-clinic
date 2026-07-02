@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Download, Loader2, Check } from "lucide-react";
-import html2canvas from "html2canvas";
+import { exportNodeToPng } from "@/lib/exportImage";
 import { Button } from "@/components/ui/button";
 
 interface SavePrescriptionButtonProps {
@@ -26,28 +26,13 @@ export default function SavePrescriptionButton({
     setStatus("loading");
 
     try {
-      const canvas = await html2canvas(node, {
-        backgroundColor: "#fef9e7",
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
+      // Let the DOM settle (button re-render shouldn't affect exportRef)
+      await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 50)));
 
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          setStatus("error");
-          return;
-        }
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.download = `eason-clinic-${rxId}.png`;
-        link.href = url;
-        link.click();
-        URL.revokeObjectURL(url);
+      await exportNodeToPng(node, `eason-clinic-${rxId}.png`);
 
-        setStatus("done");
-        setTimeout(() => setStatus("idle"), 2500);
-      }, "image/png");
+      setStatus("done");
+      setTimeout(() => setStatus("idle"), 2500);
     } catch (err) {
       console.error("Save failed:", err);
       setStatus("error");
